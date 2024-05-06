@@ -35,4 +35,10 @@ from customer
 group by customer_id
 having count(distinct product_key) = (select count(*) from product)
 
---  05/05/2024
+-- Product Sales Analysis III 05/05/2024
+
+select product_id, year as 'first_year', quantity, price
+from Sales
+where (product_id, year) in (
+    select product_id, min(year) from Sales group by product_id 
+)
