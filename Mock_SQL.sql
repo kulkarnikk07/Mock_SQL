@@ -35,10 +35,45 @@ from customer
 group by customer_id
 having count(distinct product_key) = (select count(*) from product)
 
--- Product Sales Analysis III 05/05/2024
+-- 1070 Product Sales Analysis III 05/05/2024
 
 select product_id, year as 'first_year', quantity, price
 from Sales
 where (product_id, year) in (
     select product_id, min(year) from Sales group by product_id 
 )
+
+-- 1159 Market Analysis II 05/12/2024
+
+with CTE as(
+select o.seller_id, o.item_id, i.item_brand, rank() over (partition by o.seller_id order by o.order_date) as 'rnk'
+from Orders o
+    left join items i
+    on i.item_id = o.item_id
+    )
+, CTE1 as(
+    select * from CTE where rnk = 2
+)
+   
+    select u.user_id, if(u.favorite_brand = c.item_brand,'yes','no') as '2nd_item_fav_brand'
+    from Users u 
+    left join CTE1 c
+    on c.seller_id = u.user_id
+
+-- 1194 Tournament Winners 05/12/2024
+
+select group_id, player_id
+from (
+select p.player_id,p.group_id, rank() over (partition by p.group_id order by sum(
+    case 
+    when p.player_id = m.first_player then m.first_score
+    else m.second_score
+    end
+) desc, p.player_id asc
+    ) as rnk
+from Players p
+left join Matches m
+on p.player_id IN (m.first_player, m.second_player)
+group by p.player_id,p.group_id
+) t
+where rnk =1
